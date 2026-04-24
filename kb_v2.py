@@ -49,7 +49,7 @@ EXTRA_RULES = [
     Rule(
         name="R11_recomendar_accesible",
         antecedents=(
-            ("Asignabble", "?s", "?g", "?t"),
+            ("Asignable", "?s", "?g", "?t"),
             ("NecesitaAccesibilidad", "?g"),
             ("Accesible", "?s"),
         ),
@@ -95,3 +95,4 @@ def build_kb() -> dict:
         "slots": list(SLOTS),
         "request_types": list(REQUEST_TYPES),
     }
+
