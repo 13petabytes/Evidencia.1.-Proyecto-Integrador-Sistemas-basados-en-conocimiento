@@ -35,6 +35,13 @@ MANDATORY_CASES = [
         "request_type": "PresentacionGrande",
         "expected_spaces": {"AuditorioMini"},
     },
+    {
+        "case_name": "Caso 5 - ReunionAccesible en h2",
+        "request_id": "reqE",
+        "slot": "h2",
+        "request_type": "ReunionAccesible",
+        "expected_spaces": {"AulaA", "SalaReuniones"},
+    },
 ]
 
 
