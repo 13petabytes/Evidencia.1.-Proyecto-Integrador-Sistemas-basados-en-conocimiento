@@ -29,22 +29,38 @@ EXTRA_FACTS = {
 
 # -------------------------------------------------------------------
 # TODO:
-# Agrega aquí las nuevas reglas de V2.
-#
-# Sugerencias mínimas:
-# 1) ReunionAccesible(g) ==> ReunionEquipo(g)
-# 2) ReunionAccesible(g) ==> NecesitaAccesibilidad(g)
-# 3) Asignable(s,g,t) & NecesitaAccesibilidad(g) & Accesible(s) ==> Recomendable(s,g,t)
-# 4) Asignable(s,g,t) & Presentacion(g) & Centrico(s) ==> Recomendable(s,g,t)
-# -------------------------------------------------------------------
+
 EXTRA_RULES = [
-    # Ejemplo:
-    # Rule(
-    #     name="R9_reunion_accesible_es_reunion",
-    #     antecedents=(("ReunionAccesible", "?g"),),
-    #     consequent=("ReunionEquipo", "?g"),
-    #     description="Toda reunión accesible también es una reunión de equipo.",
-    # ),
+    Rule(
+        name="R11_prioridad_presentacion",
+        antecedents=(("PresentacionGrande", "?g"),),
+        consequent=("AltaPrioridad", "?g"),
+    ),
+
+    Rule(
+        name="R12_preferir_prioridad",
+        antecedents=(
+            ("Asignable", "?s", "?g", "?t"),
+            ("AltaPrioridad", "?g"),
+        ),
+        consequent=("AltamenteRecomendable", "?s", "?g", "?t"),
+    ),
+
+    Rule(
+        name="R13_prioridad_director",
+        antecedents=(
+            ("Solicita", "Director1", "?t"),
+            ("Libre", "?s", "?t"),
+        ),
+        consequent=("AsignablePrioritario", "?s", "Director1", "?t"),
+        description="El usuario Director1 tiene prioridad sobre espacios libres.",
+    ),
+
+    Rule(
+        name="R14_requiere_continuidad",
+        antecedents=(("Requiere2Horas", "?g"),),
+        consequent=("NecesitaSlotsConsecutivos", "?g"),
+    ),
 ]
 
 

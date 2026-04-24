@@ -63,8 +63,14 @@ with left_col:
         request_id = st.text_input("ID de solicitud", value="req1")
         slot = st.selectbox("Franja horaria", kb["slots"])
         request_type = st.selectbox("Tipo de solicitud", kb["request_types"])
-        submit = st.form_submit_button("Correr inferencia")
 
+        # 👇 SOLO aparece en KB V2
+        if selected_module_name == "kb_v2":
+            duration = st.selectbox("Duración (horas)", [1, 2, 3, 4])
+        else:
+            duration = 1  # valor por defecto para KB V1
+
+        submit = st.form_submit_button("Correr inferencia")
     if submit:
         result = run_request(current_facts, rules, request_id, slot, request_type)
         st.session_state["last_result"] = {
@@ -90,6 +96,19 @@ with right_col:
         assignable_spaces = [fact[1] for fact in result["assignable"]]
         recommendable_spaces = [fact[1] for fact in result["recommendable"]]
 
+        if selected_module_name == "kb_v2":
+            valid_spaces = []
+
+            for space in assignable_spaces:
+                start_index = kb["slots"].index(slot)
+                needed_slots = kb["slots"][start_index:start_index + duration]
+
+                disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
+
+                if len(needed_slots) == duration and disponible:
+                    valid_spaces.append(space)
+
+            assignable_spaces = valid_spaces
         if assignable_spaces:
             st.success("La consulta ∃s Asignable(s, g, t) es verdadera.")
             st.write("**Espacios asignables:**", ", ".join(assignable_spaces))
@@ -107,7 +126,14 @@ with right_col:
             for col, space in zip(reserve_cols, assignable_spaces):
                 with col:
                     if st.button(f"Reservar {space}", key=f"reserve::{selected_module_name}::{space}::{request_id}::{slot}"):
-                        updated = reserve_space(current_facts, space, request_id, slot)
+                        updated = reserve_space(
+                            current_facts,
+                            space,
+                            request_id,
+                            slot,
+                            duration if selected_module_name == "kb_v2" else 1,
+                            kb["slots"]
+                        )
                         st.session_state[session_key] = updated
                         st.session_state.pop("last_result", None)
                         st.rerun()
