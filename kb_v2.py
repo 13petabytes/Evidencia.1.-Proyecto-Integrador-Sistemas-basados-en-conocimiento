@@ -19,7 +19,6 @@ EXTRA_FACTS = {
     ("Centrico", "SalaReuniones"),
 }
 
-<<<<<<< HEAD
 
 
 EXTRA_RULES = [
@@ -53,8 +52,6 @@ EXTRA_RULES = [
         antecedents=(("Requiere2Horas", "?g"),),
         consequent=("NecesitaSlotsConsecutivos", "?g"),
     ),
-]
->>>>>>> develop
 
     ##### Herencia de Reunión Accesible #####
     # ∀𝑔(𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑙𝑒(𝑔)⇒𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐸𝑞𝑢𝑖𝑝𝑜(𝑔))
