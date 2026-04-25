@@ -19,7 +19,45 @@ EXTRA_FACTS = {
     ("Centrico", "SalaReuniones"),
 }
 
+<<<<<<< HEAD
 EXTRA_RULES = [
+=======
+# -------------------------------------------------------------------
+# TODO:
+
+EXTRA_RULES = [
+    Rule(
+        name="R13_prioridad_presentacion",
+        antecedents=(("PresentacionGrande", "?g"),),
+        consequent=("AltaPrioridad", "?g"),
+    ),
+
+    Rule(
+        name="R14_preferir_prioridad",
+        antecedents=(
+            ("Asignable", "?s", "?g", "?t"),
+            ("AltaPrioridad", "?g"),
+        ),
+        consequent=("AltamenteRecomendable", "?s", "?g", "?t"),
+    ),
+
+    Rule(
+        name="R15_prioridad_director",
+        antecedents=(
+            ("Solicita", "Director1", "?t"),
+            ("Libre", "?s", "?t"),
+        ),
+        consequent=("AsignablePrioritario", "?s", "Director1", "?t"),
+        description="El usuario Director1 tiene prioridad sobre espacios libres.",
+    ),
+
+    Rule(
+        name="R16_requiere_continuidad",
+        antecedents=(("Requiere2Horas", "?g"),),
+        consequent=("NecesitaSlotsConsecutivos", "?g"),
+    ),
+]
+>>>>>>> develop
 
     ##### Herencia de Reunión Accesible #####
     # ∀𝑔(𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑙𝑒(𝑔)⇒𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐸𝑞𝑢𝑖𝑝𝑜(𝑔))
