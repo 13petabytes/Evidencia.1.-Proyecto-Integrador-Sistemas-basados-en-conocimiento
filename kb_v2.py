@@ -127,3 +127,4 @@ def build_kb() -> dict:
         "slots": list(SLOTS),
         "request_types": list(REQUEST_TYPES),
     }
+

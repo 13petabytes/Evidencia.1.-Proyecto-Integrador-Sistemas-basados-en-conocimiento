@@ -64,7 +64,7 @@ with left_col:
         slot = st.selectbox("Franja horaria", kb["slots"])
         request_type = st.selectbox("Tipo de solicitud", kb["request_types"])
 
-        # 👇 SOLO aparece en KB V2
+        # KB V2: Añadir la duración de la solicitud
         if selected_module_name == "kb_v2":
             duration = st.selectbox("Duración (horas)", [1, 2, 3, 4])
         else:
@@ -96,6 +96,7 @@ with right_col:
         assignable_spaces = [fact[1] for fact in result["assignable"]]
         recommendable_spaces = [fact[1] for fact in result["recommendable"]]
 
+        # (KB V2) Añadir duración de la solicitud
         if selected_module_name == "kb_v2":
             valid_spaces = []
 
