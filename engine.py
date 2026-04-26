@@ -152,7 +152,7 @@ def add_request_facts(base_facts: Iterable[Fact], request_id: str, slot: str, re
     return updated
 
 
-# 🔥 NUEVA FUNCIÓN MEJORADA
+# (KB_V2) Función para reservar un espacio (considerando la duración de la solicitud)
 def reserve_space(
     base_facts: Iterable[Fact],
     space: str,

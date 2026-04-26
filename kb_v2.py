@@ -9,78 +9,49 @@ from kb_v1 import SLOTS, SPACES
 
 TITLE = "KB V2 - plantilla para extender V1"
 
-# Se agrega un nuevo tipo de solicitud para que la aplicación pueda reconocerlo
-# y mostrarlo como opción al usuario.
+# Esta lista ya incluye el nuevo tipo de solicitud para que la app lo muestre.
 REQUEST_TYPES = list(V1_REQUEST_TYPES) + ["ReunionAccesible"]
 
 
-# =========================
-# HECHOS NUEVOS AGREGADOS
-# =========================
-# Se añaden propiedades adicionales a ciertos espacios:
-# - Accesible: espacios aptos para personas con movilidad reducida.
-# - Centrico: espacios ubicados en una zona conveniente o principal.
 EXTRA_FACTS = {
     ("Accesible", "AulaA"),
     ("Accesible", "SalaReuniones"),
     ("Centrico", "AulaA"),
     ("Centrico", "SalaReuniones"),
+    ("CapacidadMedia", "AulaA"),
+    ("CapacidadMedia", "SalaReuniones"),
+    ("CapacidadBaja", "AulaB"),
+    ("CapacidadBaja", "Biblio1"),
+    ("CapacidadAlta", "SalaReuniones"),
+    ("CapacidadAlta", "AuditorioMini"),
 }
 
-
-# =========================
-# REGLAS NUEVAS KB V2
-# =========================
 EXTRA_RULES = [
 
-    # ==========================================================
-    # R9. HERENCIA DEL NUEVO TIPO DE SOLICITUD
-    # ∀g (ReunionAccesible(g) ⇒ ReunionEquipo(g))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Toda solicitud clasificada como ReunionAccesible también
-    # debe ser tratada como una ReunionEquipo, heredando así
-    # todas las reglas de asignación que ya existían para ese tipo.
-    # ==========================================================
+    ##### Herencia de Reunión Accesible #####
+    # ∀𝑔(𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑙𝑒(𝑔)⇒𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐸𝑞𝑢𝑖𝑝𝑜(𝑔))
     Rule(
         name="R9_reunion_accesible_es_reunion",
         antecedents=(("ReunionAccesible", "?g"),),
         consequent=("ReunionEquipo", "?g"),
         description=(
-            "Toda solicitud de tipo ReunionAccesible hereda las "
-            "características y reglas de ReunionEquipo."
+            "Para toda reunión, si es accesible, entonces es una Reunión en Equipo."
         ),
     ),
 
-    # ==========================================================
-    # R10. UNA REUNIÓN ACCESIBLE NECESITA ACCESIBILIDAD
-    # ∀g (ReunionAccesible(g) ⇒ NecesitaAccesibilidad(g))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Si la reunión fue solicitada como accesible, entonces el
-    # motor debe marcarla con el requisito adicional de buscar
-    # un espacio con infraestructura accesible.
-    # ==========================================================
+    ##### Requisito de Accesibilidad #####
+    # ∀𝑔(𝑅𝑒𝑢𝑛𝑖𝑜𝑛𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑙𝑒(𝑔) ⇒ 𝑁𝑒𝑐𝑒𝑠𝑖𝑡𝑎𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑖𝑙𝑖𝑑𝑎𝑑(𝑔))
     Rule(
         name="R10_reunion_accesible_necesita_accesibilidad",
         antecedents=(("ReunionAccesible", "?g"),),
         consequent=("NecesitaAccesibilidad", "?g"),
         description=(
-            "Toda reunión accesible requiere que el espacio asignado "
-            "cuente con condiciones de accesibilidad."
+            "Toda reunión accesible requiere que el espacio asignado sea Accesible."
         ),
     ),
 
-    # ==========================================================
-    # R11. RECOMENDACIÓN DE ESPACIOS ACCESIBLES
-    # ∀s∀g∀t (Asignable(s,g,t) ∧ NecesitaAccesibilidad(g) ∧ Accesible(s)
-    #         ⇒ Recomendable(s,g,t))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Si un espacio ya puede asignarse normalmente y además cumple
-    # con la propiedad de ser accesible, entonces pasa a ser una
-    # opción recomendada para ese tipo de solicitud.
-    # ==========================================================
+    ##### Recomendación por Accesibilidad #####
+    # ∀𝑠∀𝑔∀𝑡(𝐴𝑠𝑖𝑔𝑛𝑎𝑏𝑙𝑒(𝑠,𝑔,𝑡)∧𝑁𝑒𝑐𝑒𝑠𝑖𝑡𝑎𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑖𝑙𝑖𝑑𝑎𝑑(𝑔)∧𝐴𝑐𝑐𝑒𝑠𝑖𝑏𝑙𝑒(𝑠)⇒𝑅𝑒𝑐𝑜𝑚𝑒𝑛𝑑𝑎𝑏𝑙𝑒(𝑠,𝑔,𝑡))
     Rule(
         name="R11_recomendar_accesible",
         antecedents=(
@@ -90,21 +61,12 @@ EXTRA_RULES = [
         ),
         consequent=("Recomendable", "?s", "?g", "?t"),
         description=(
-            "Un espacio asignable y accesible es recomendable para "
-            "solicitudes que requieren accesibilidad."
-        ),
+            "Un espacio asignable y accesible es recomendable para solicitudes que necesitan accesibilidad."
+        ), 
     ),
 
-    # ==========================================================
-    # R12. RECOMENDACIÓN DE ESPACIOS CÉNTRICOS PARA PRESENTACIONES
-    # ∀s∀g∀t (Asignable(s,g,t) ∧ Presentacion(g) ∧ Centrico(s)
-    #         ⇒ Recomendable(s,g,t))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Las presentaciones suelen beneficiarse de espacios mejor
-    # ubicados o más visibles, por ello si el espacio es céntrico
-    # se marca como recomendable.
-    # ==========================================================
+    ##### Recomendación por Centralidad en Presentaciones #####
+    #∀𝑠∀𝑔∀𝑡(𝐴𝑠𝑖𝑔𝑛𝑎𝑏𝑙𝑒(𝑠,𝑔,𝑡)∧𝑃𝑟𝑒𝑠𝑒𝑛𝑡𝑎𝑐𝑖𝑜𝑛(𝑔)∧𝐶𝑒𝑛𝑡𝑟𝑖𝑐𝑜(𝑠)⇒𝑅𝑒𝑐𝑜𝑚𝑒𝑛𝑑𝑎𝑏𝑙𝑒(𝑠,𝑔,𝑡))
     Rule(
         name="R12_recomendar_centrico_presentacion",
         antecedents=(
@@ -114,59 +76,32 @@ EXTRA_RULES = [
         ),
         consequent=("Recomendable", "?s", "?g", "?t"),
         description=(
-            "Un espacio asignable y céntrico es recomendable para "
-            "solicitudes de tipo Presentacion."
+            "Un espacio asignable y céntrico es recomendable para solicitudes de tipo Presentación."
         ),
     ),
 
-    # ==========================================================
-    # R13. JERARQUÍA DE CAPACIDAD
-    # ∀s (CapacidadAlta(s) ⇒ CapacidadMedia(s))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Un espacio con capacidad alta naturalmente puede cubrir
-    # también solicitudes de tamaño medio, ampliando sus posibles
-    # usos dentro del sistema experto.
-    # ==========================================================
+    ##### Jerarquía de capacidad (MI MON) #####
+        # ∀s  CapacidadAlta(s) ⇒ CapacidadMedia(s)
     Rule(
         name="R13_capacidad_alta_implica_media",
         antecedents=(("CapacidadAlta", "?s"),),
         consequent=("CapacidadMedia", "?s"),
-        description=(
-            "Todo espacio de capacidad alta también satisface "
-            "requerimientos de capacidad media."
-        ),
+        description="Todo espacio de capacidad alta también tiene capacidad media, haciéndolo elegible para solicitudes medianas.",
     ),
 
-    # ==========================================================
-    # R14. PRESENTACIONES GRANDES SON DE ALTA PRIORIDAD
+    ### Recomendación por prioridad de presentación grande ###
     # ∀g (PresentacionGrande(g) ⇒ AltaPrioridad(g))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Se define que una presentación grande debe ser tratada como
-    # una solicitud importante, para que el motor le dé preferencia
-    # en la recomendación de mejores espacios.
-    # ==========================================================
     Rule(
         name="R14_prioridad_presentacion",
         antecedents=(("PresentacionGrande", "?g"),),
         consequent=("AltaPrioridad", "?g"),
         description=(
-            "Las presentaciones grandes se consideran solicitudes "
-            "de alta prioridad."
+            "Las presentaciones grandes tienen alta prioridad."
         ),
     ),
 
-    # ==========================================================
-    # R15. ESPACIOS ALTAMENTE RECOMENDABLES PARA ALTA PRIORIDAD
-    # ∀s∀g∀t (Asignable(s,g,t) ∧ AltaPrioridad(g)
-    #         ⇒ AltamenteRecomendable(s,g,t))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Cuando una solicitud tiene alta prioridad, cualquier espacio
-    # que cumpla con asignabilidad se eleva de recomendable normal
-    # a altamente recomendable para ser mostrado primero.
-    # ==========================================================
+    ### Recomendación por prioridad de presentación de alta prioridad ###
+    # ∀s∀g∀t(Asignable(s,g,t)∧AltaPrioridad(g)⇒AltamenteRecomendable(s,g,t))
     Rule(
         name="R15_preferir_prioridad",
         antecedents=(
@@ -174,22 +109,11 @@ EXTRA_RULES = [
             ("AltaPrioridad", "?g"),
         ),
         consequent=("AltamenteRecomendable", "?s", "?g", "?t"),
-        description=(
-            "Los espacios asignables para solicitudes de alta prioridad "
-            "se clasifican como altamente recomendables."
-        ),
+        description=("Si una solicitud tiene alta prioridad, es altamente recomendable."),
     ),
 
-    # ==========================================================
-    # R16. PRIORIDAD ESPECIAL PARA EL DIRECTOR
-    # ∀s∀t (Solicita(Director1,t) ∧ Libre(s,t)
-    #       ⇒ AsignablePrioritario(s,Director1,t))
-    # ----------------------------------------------------------
-    # Lógica:
-    # Si quien realiza la solicitud es el Director1, cualquier espacio
-    # libre pasa a considerarse prioritariamente asignable para él,
-    # reflejando una política institucional de preferencia.
-    # ==========================================================
+    ### Recomendación por prioridad de director ###
+    # ∀s∀t(Solicita(Director1,t)∧ Libre(s, t)⇒ AsignablePrioritario(s,Director1,t))
     Rule(
         name="R16_prioridad_director",
         antecedents=(
@@ -197,13 +121,81 @@ EXTRA_RULES = [
             ("Libre", "?s", "?t"),
         ),
         consequent=("AsignablePrioritario", "?s", "Director1", "?t"),
+        description="El usuario Director1 tiene prioridad sobre espacios libres.",
+    ),
+
+    ### Recomendación por continuidad ###
+    # ∀g (Requiere2Horas(g) ⇒ NecesitaSlotsConsecutivos(g))
+    Rule(
+        name="R17_requiere_continuidad",
+        antecedents=(("Requiere2Horas", "?g"),),
+        consequent=("NecesitaSlotsConsecutivos", "?g"),
+        description=("Para toda solicitud que requiere 2 horas, necesita slots consecutivos."),
+    ),
+
+    # Abigail
+
+    ### Las reuniones individuales son de capacidad baja ###
+    # ∀g  EstudioIndividual(g) ⇒ CapacidadBaja(g)
+    Rule(
+    name="R18_capacidad_alta_implica_media",
+    antecedents=(("EstudioIndividual", "?g"),),
+    consequent=("CapacidadBaja", "?g"),
+    description=(
+        "Todo estudio individual es de capacidad baja."
+    ),
+    ),
+
+    ### Capacidad Media implica capacidad Baja ###
+    # ∀s  CapacidadMedia(s) ⇒ CapacidadBaja(s)
+    Rule(
+        name="R19_capacidad_media_implica_baja",
+        antecedents=(("CapacidadMedia", "?s"),),
+        consequent=("CapacidadBaja", "?s"),
         description=(
-            "El usuario Director1 tiene prioridad institucional "
-            "sobre cualquier espacio libre."
+            "Todo espacio con capacidad media también cumple con capacidad baja."
         ),
     ),
-]
 
+    ### Reunion en equipo requiere capacidad Media ###
+    # ∀g  ReunionEquipo(g) ⇒ RequiereCapacidadMedia(g)
+    Rule(
+        name="R20_reunion_equipo_requiere_media",
+        antecedents=(("ReunionEquipo", "?g"),),
+        consequent=("RequiereCapacidadMedia", "?g"),
+        description=(
+            "Toda reunión en equipo requiere al menos un espacio con capacidad media."
+        ),
+    ),
+
+    ### Toda presentación es de capacidad Media ###
+    # ∀g  Presentacion(g) ⇒ CapacidadMedia(g)
+    Rule(
+        name="R21_presentacion_capacidad_media",
+        antecedents=(("Presentacion", "?g"),),
+        consequent=("CapacidadMedia", "?g"),
+        description=(
+            "Toda presentación es de capacidad media."
+        ),
+    ),
+
+    ### Si una solicitud requiere silencio, el espacio debe ser silenciosa ###
+    # ∀s∀g∀t (Libre(s,t) ∧ Solicita(g,t) ∧ RequiereSilencio(g) ∧ Silenciosa(s) ⇒ Asignable(s,g,t))
+    Rule(
+        name="R22_asignable_si_requiere_silencio",
+        antecedents=(
+            ("Libre", "?s", "?t"),
+            ("Solicita", "?g", "?t"),
+            ("RequiereSilencio", "?g"),
+            ("Silenciosa", "?s"),
+        ),
+        consequent=("Asignable", "?s", "?g", "?t"),
+        description=(
+            "Si una solicitud requiere silencio, solo espacios silenciosos pueden ser asignables."
+        ),
+    ),
+
+]
 
 def build_kb() -> dict:
     return {
