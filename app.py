@@ -6,7 +6,13 @@ import streamlit as st
 
 from cases import run_cases
 from engine import fact_to_string, reserve_space, run_request
-from viz import availability_dataframe, comparison_dataframe
+from viz import (
+    availability_dataframe,
+    comparison_dataframe,
+    v2_exclusive_summary,
+    v2_metrics_dataframe,
+    v2_pass_rate_dataframe,
+)
 
 
 st.set_page_config(page_title="Mini agente lógico", layout="wide")
@@ -64,11 +70,10 @@ with left_col:
         slot = st.selectbox("Franja horaria", kb["slots"])
         request_type = st.selectbox("Tipo de solicitud", kb["request_types"])
 
-        # KB V2: Añadir la duración de la solicitud
         if selected_module_name == "kb_v2":
             duration = st.selectbox("Duración (horas)", [1, 2, 3, 4])
         else:
-            duration = 1  # valor por defecto para KB V1
+            duration = 1
 
         submit = st.form_submit_button("Correr inferencia")
     if submit:
@@ -96,20 +101,16 @@ with right_col:
         assignable_spaces = [fact[1] for fact in result["assignable"]]
         recommendable_spaces = [fact[1] for fact in result["recommendable"]]
 
-        # (KB V2) Añadir duración de la solicitud
         if selected_module_name == "kb_v2":
             valid_spaces = []
-
             for space in assignable_spaces:
                 start_index = kb["slots"].index(slot)
                 needed_slots = kb["slots"][start_index:start_index + duration]
-
                 disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
-
                 if len(needed_slots) == duration and disponible:
                     valid_spaces.append(space)
-
             assignable_spaces = valid_spaces
+
         if assignable_spaces:
             st.success("La consulta ∃s Asignable(s, g, t) es verdadera.")
             st.write("**Espacios asignables:**", ", ".join(assignable_spaces))
@@ -120,6 +121,17 @@ with right_col:
             st.write("**Espacios recomendables:**", ", ".join(recommendable_spaces))
         else:
             st.write("**Espacios recomendables:** ninguno derivado todavía.")
+
+        # Métricas V2 adicionales en la inferencia activa
+        if selected_module_name == "kb_v2":
+            closure = result["closure"]
+            from engine import filter_facts
+            alta_prio = filter_facts(closure, "AltamenteRecomendable", None, request_id, slot)
+            asig_prio = filter_facts(closure, "AsignablePrioritario", None, request_id, slot)
+            if alta_prio:
+                st.info(f"⭐ Alta prioridad (R14-R15): {len(alta_prio)} espacio(s) altamente recomendable(s).")
+            if asig_prio:
+                st.info(f"🏷️ Prioridad director (R16): {len(asig_prio)} espacio(s) asignable(s) prioritariamente.")
 
         st.markdown("#### Reservar")
         if assignable_spaces:
@@ -133,7 +145,7 @@ with right_col:
                             request_id,
                             slot,
                             duration if selected_module_name == "kb_v2" else 1,
-                            kb["slots"]
+                            kb["slots"],
                         )
                         st.session_state[session_key] = updated
                         st.session_state.pop("last_result", None)
@@ -151,14 +163,45 @@ with right_col:
     else:
         st.info("Envía una solicitud para ver asignaciones, recomendaciones y traza.")
 
+# ---------------------------------------------------------------------------
+# Sección de comparación y análisis
+# ---------------------------------------------------------------------------
 st.markdown("---")
-st.markdown("### Comparación rápida KB V1 vs KB V2")
+st.markdown("### Comparación rápida KB V1 vs KB V2 (casos compartidos)")
 
 results_v1 = run_cases("kb_v1")
 results_v2 = run_cases("kb_v2")
+
 comparison_df = comparison_dataframe(results_v1, results_v2)
 st.bar_chart(comparison_df)
 
+# ---------------------------------------------------------------------------
+# Métricas exclusivas de KB V2
+# ---------------------------------------------------------------------------
+st.markdown("### Métricas de mejora KB V2 (todas las reglas nuevas R9–R22)")
+st.caption(
+    "Incluye los 5 casos compartidos más 6 casos diseñados para ejercitar "
+    "accesibilidad (R9-R11), centralidad (R12), jerarquía de capacidad (R13), "
+    "prioridad (R14-R16) y silencio explícito (R22)."
+)
+
+metrics_df = v2_metrics_dataframe(results_v2)
+st.bar_chart(metrics_df)
+
+# Tabla resumen de casos exclusivos V2
+exclusive_df = v2_exclusive_summary(results_v2)
+if not exclusive_df.empty:
+    st.markdown("#### Casos exclusivos de KB V2")
+    st.dataframe(exclusive_df, hide_index=True, use_container_width=True)
+
+# Tasa de verificación V2
+st.markdown("### Verificación de casos V2 (pasan el mínimo esperado)")
+pass_df = v2_pass_rate_dataframe(results_v2)
+st.bar_chart(pass_df)
+
+# ---------------------------------------------------------------------------
+# Detalle completo expandible
+# ---------------------------------------------------------------------------
 with st.expander("Ver resultados detallados de casos de prueba"):
     col1, col2 = st.columns(2)
     with col1:
