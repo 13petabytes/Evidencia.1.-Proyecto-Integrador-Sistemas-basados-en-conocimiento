@@ -140,6 +140,7 @@ Todos los equipos trabajarán con el mismo dominio.
 En `KB_v2` aparecerá además:
 
 - `ReunionAccesible`
+- `Director1` 
 
 ---
 
@@ -173,7 +174,10 @@ En `KB_v2` aparecerá además:
 
 Pueden agregar otros predicados si los necesitan.
 
----
+### Predicados agregados en KB_v2
+- `AsignablePrioritario (s, p, t)`
+
+--- 
 
 ## Representación recomendada
 

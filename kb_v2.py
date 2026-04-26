@@ -180,7 +180,7 @@ EXTRA_RULES = [
     ),
 
     ### Si una solicitud requiere silencio, el espacio debe ser silenciosa ###
-    # ∀s∀t(Solicita(g,t)∧RequiereSilencio(g)⇒Silenciosa(s))
+    # ∀s∀g∀t (Libre(s,t) ∧ Solicita(g,t) ∧ RequiereSilencio(g) ∧ Silenciosa(s) ⇒ Asignable(s,g,t))
     Rule(
         name="R22_asignable_si_requiere_silencio",
         antecedents=(
