@@ -10,7 +10,7 @@ from kb_v1 import SLOTS, SPACES
 TITLE = "KB V2 - plantilla para extender V1"
 
 # Esta lista ya incluye el nuevo tipo de solicitud para que la app lo muestre.
-REQUEST_TYPES = list(V1_REQUEST_TYPES) + ["ReunionAccesible"]
+REQUEST_TYPES = list(V1_REQUEST_TYPES) + ["ReunionAccesible",  "ReunionLarga"]
 
 
 EXTRA_FACTS = {
@@ -24,6 +24,10 @@ EXTRA_FACTS = {
     ("CapacidadBaja", "Biblio1"),
     ("CapacidadAlta", "SalaReuniones"),
     ("CapacidadAlta", "AuditorioMini"),
+    # Hechos para reuniones largas
+    ("Consecutivo", "h1", "h2"),
+    ("Consecutivo", "h2", "h3"),
+    ("Consecutivo", "h3", "h4"),
 }
 
 EXTRA_RULES = [
@@ -138,12 +142,9 @@ EXTRA_RULES = [
     ### Las reuniones individuales son de capacidad baja ###
     # ∀g  EstudioIndividual(g) ⇒ CapacidadBaja(g)
     Rule(
-    name="R18_capacidad_alta_implica_media",
-    antecedents=(("EstudioIndividual", "?g"),),
-    consequent=("CapacidadBaja", "?g"),
-    description=(
-        "Todo estudio individual es de capacidad baja."
-    ),
+        name="R18_estudio_requiere_baja",
+        antecedents=(("EstudioIndividual", "?g"),),
+        consequent=("RequiereCapacidadBaja", "?g"),
     ),
 
     ### Capacidad Media implica capacidad Baja ###
@@ -171,27 +172,109 @@ EXTRA_RULES = [
     ### Toda presentación es de capacidad Media ###
     # ∀g  Presentacion(g) ⇒ CapacidadMedia(g)
     Rule(
-        name="R21_presentacion_capacidad_media",
+        name="R21_presentacion_requiere_media",
         antecedents=(("Presentacion", "?g"),),
-        consequent=("CapacidadMedia", "?g"),
+        consequent=("RequiereCapacidadMedia", "?g"),
+        description="Toda solicitud de tipo presentación requiere capacidad media.",
+    ),
+
+    ### Un espacio con proyector es recomendable ###
+    # ∀s∀g∀t (Asignable(s,g, t) ∧ TieneProyector(s) ) ⇒ Recomendable(s,g,t))
+    Rule(
+        name="R22_recomendar_tiene_proyectos",
+        antecedents=(
+            ("Asignable", "?s", "?g", "?t"),
+            ("TieneProyector", "?s"),
+        ),
+        consequent=("Recomendable", "?s", "?g", "?t"),
+        description="Si un espacio tiene proyector, también es recomendable.",
+    ),
+
+    ### Reglas de compatibilidad ###
+    ### Compatibilidad capacidad media
+    Rule(
+        name="R23_compatible_capacidad_media",
+        antecedents=(
+            ("RequiereCapacidadMedia", "?g"),
+            ("CapacidadMedia", "?s"),
+        ),
+        consequent=("CompatibleCapacidad", "?s", "?g"),
         description=(
-            "Toda presentación es de capacidad media."
+            "Un espacio es compatible si cumple la capacidad media requerida."
         ),
     ),
 
-    ### Si una solicitud requiere silencio, el espacio debe ser silenciosa ###
-    # ∀s∀g∀t (Libre(s,t) ∧ Solicita(g,t) ∧ RequiereSilencio(g) ∧ Silenciosa(s) ⇒ Asignable(s,g,t))
+    ### Compatibilidad capacidad baja
     Rule(
-        name="R22_asignable_si_requiere_silencio",
+        name="R24_compatible_capacidad_baja",
+        antecedents=(
+            ("RequiereCapacidadBaja", "?g"),
+            ("CapacidadBaja", "?s"),
+        ),
+        consequent=("CompatibleCapacidad", "?s", "?g"),
+        description=(
+            "Un espacio es compatible si cumple la capacidad baja requerida."
+        ),
+    ),
+
+    ## Asignación para toda capacidad
+    Rule(
+        name="R25_asignar_por_capacidad",
         antecedents=(
             ("Libre", "?s", "?t"),
             ("Solicita", "?g", "?t"),
-            ("RequiereSilencio", "?g"),
-            ("Silenciosa", "?s"),
+            ("CompatibleCapacidad", "?s", "?g"),
         ),
         consequent=("Asignable", "?s", "?g", "?t"),
         description=(
-            "Si una solicitud requiere silencio, solo espacios silenciosos pueden ser asignables."
+            "Un espacio compatible en capacidad y libre puede asignarse."
+        ),
+    ),
+
+    # Recomendación por capacidad
+    Rule(
+        name="R26_recomendar_capacidad_justa",
+        antecedents=(
+            ("Asignable", "?s", "?g", "?t"),
+            ("CompatibleCapacidad", "?s", "?g"),
+        ),
+        consequent=("Recomendable", "?s", "?g", "?t"),
+    ),
+
+    ### Reglas para la asignación por tiempo
+    # Si dos slots consecutivos están libres, se genera un slot largo
+    Rule(
+        name="R27_generar_slot_largo",
+        antecedents=(
+            ("Libre", "?s", "?t1"),
+            ("Libre", "?s", "?t2"),
+            ("Consecutivo", "?t1", "?t2"),
+        ),
+        consequent=("LibreLargo", "?s", "?t1"),
+        description=(
+            "Si dos franjas consecutivas están libres, se genera un slot largo."
+        ),
+    ),
+    # Reuniones largas requieren slots largos
+    Rule(
+        name="R28_reunion_larga_usa_slot_largo",
+        antecedents=(
+            ("ReunionLarga", "?g"),
+            ("Solicita", "?g", "?t"),
+        ),
+        consequent=("NecesitaSlotLargo", "?g"),
+    ),
+    # Reuniones largas sólo pueden ser asignadas a slots largos
+    Rule(
+        name="R29_asignar_reunion_larga",
+        antecedents=(
+            ("NecesitaSlotLargo", "?g"),
+            ("Solicita", "?g", "?t"),
+            ("LibreLargo", "?s", "?t"),
+        ),
+        consequent=("Asignable", "?s", "?g", "?t"),
+        description=(
+            "Reuniones largas solo se asignan en slots largos disponibles."
         ),
     ),
 

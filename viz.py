@@ -131,7 +131,7 @@ def v2_exclusive_summary(results_v2: List[dict]) -> pd.DataFrame:
                 "Alta prioridad": r.get("alta_prioridad_count", 0),
                 "Rec. accesible": r.get("recomendable_accesible_count", 0),
                 "Rec. céntrico": r.get("recomendable_centrico_count", 0),
-                "✅ Pasa": r["passes_minimum_check"],
+                "Pasa": r["passes_minimum_check"],
             }
         )
     return pd.DataFrame(rows)
