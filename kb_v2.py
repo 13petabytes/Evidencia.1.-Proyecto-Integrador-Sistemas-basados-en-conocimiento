@@ -30,6 +30,7 @@ EXTRA_FACTS = {
     ("Consecutivo", "h3", "h4"),
     ("EsDirector", "Director1"),
     ("Solicita", "Director1", "h1")
+    ("Requiere2Horas", "req2")
 }
 
 EXTRA_RULES = [
@@ -234,7 +235,7 @@ EXTRA_RULES = [
     ### Un espacio con proyector es recomendable ###
     # ∀s∀g∀t (Asignable(s,g, t) ∧ TieneProyector(s) ) ⇒ Recomendable(s,g,t))
     Rule(
-        name="R23_recomendar_tiene_proyectos",
+        name="R23_recomendar_tiene_proyector",
         antecedents=(
             ("Asignable", "?s", "?g", "?t"),
             ("TieneProyector", "?s"),

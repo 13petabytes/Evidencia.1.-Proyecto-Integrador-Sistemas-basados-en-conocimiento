@@ -48,7 +48,7 @@ MANDATORY_CASES = [
 ]
 
 # ---------------------------------------------------------------------------
-# Casos exclusivos de KB V2 — ejercitan las reglas R9–R22
+# Casos exclusivos de KB V2 — ejercitan las reglas R9–R30
 # ---------------------------------------------------------------------------
 V2_ONLY_CASES = [
     # R9 + R10 + R11: ReunionAccesible hereda ReunionEquipo y además
