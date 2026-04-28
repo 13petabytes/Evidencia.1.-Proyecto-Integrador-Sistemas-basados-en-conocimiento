@@ -29,8 +29,8 @@ EXTRA_FACTS = {
     ("Consecutivo", "h2", "h3"),
     ("Consecutivo", "h3", "h4"),
     ("EsDirector", "Director1"),
-    ("Solicita", "Director1", "h1")
-    ("Requiere2Horas", "req2")
+    ("Solicita", "Director1", "h1"),
+    ("Requiere2Horas", "req2"),
 }
 
 EXTRA_RULES = [
