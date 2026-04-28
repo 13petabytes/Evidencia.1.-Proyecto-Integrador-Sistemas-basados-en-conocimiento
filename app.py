@@ -178,13 +178,13 @@ st.bar_chart(comparison_df)
 # ---------------------------------------------------------------------------
 # Métricas exclusivas de KB V2
 # ---------------------------------------------------------------------------
-st.markdown("### Métricas de mejora KB V2 (todas las reglas nuevas R9–R22)")
+st.markdown("### Métricas de mejora KB V2 (prioridad y calidad de asignación)")
 st.caption(
-    "Incluye los 5 casos compartidos más 6 casos diseñados para ejercitar "
-    "accesibilidad (R9-R11), centralidad (R12), jerarquía de capacidad (R13), "
-    "prioridad (R14-R16) y silencio explícito (R22)."
+    "Evalúa el impacto de las nuevas reglas: accesibilidad (R9-R11), "
+    "centralidad (R12), capacidad (R13), y especialmente prioridad del director "
+    "(R16-R17) y altamente recomendable. Se mide cuántos casos activan prioridad "
+    "y cuántos generan asignaciones de máxima calidad."
 )
-
 metrics_df = v2_metrics_dataframe(results_v2)
 st.bar_chart(metrics_df)
 
