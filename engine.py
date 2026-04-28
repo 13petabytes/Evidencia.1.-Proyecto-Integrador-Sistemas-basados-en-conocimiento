@@ -179,11 +179,6 @@ def reserve_space(
     selected_slots = slots[start_index:start_index + duration]
 
     for s in selected_slots:
-        # Función para eliminar una reserva (Para el Director)
-        to_remove = [f for f in updated if f[0] == "Reservada" and f[1] == space and f[3] == s]
-        for f in to_remove:
-            updated.discard(f)
-
         updated.discard(("Libre", space, s))
         updated.add(("Ocupada", space, s))
         updated.add(("Reservada", space, request_id, s))

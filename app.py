@@ -106,19 +106,7 @@ with right_col:
             for space in assignable_spaces:
                 start_index = kb["slots"].index(slot)
                 needed_slots = kb["slots"][start_index:start_index + duration]
-                
-                # Para el Director1, aceptar espacios Libres Y RESERVADOS
-                if request_id == "Director1":
-                    def slot_available(space, s):
-                        if ("Libre", space, s) in current_facts:
-                            return True
-                        # Checar si fue reservado por alguien más (para quitarlo)
-                        return any(f[0] == "Reservada" and f[1] == space and f[3] == s 
-                                   for f in current_facts)
-                    disponible = all(slot_available(space, s) for s in needed_slots)
-                else:
-                    disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
-                
+                disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
                 if len(needed_slots) == duration and disponible:
                     valid_spaces.append(space)
             assignable_spaces = valid_spaces

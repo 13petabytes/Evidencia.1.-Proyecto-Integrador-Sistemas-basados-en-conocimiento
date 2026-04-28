@@ -128,22 +128,10 @@ EXTRA_RULES = [
         description="El usuario Director1 tiene prioridad sobre espacios libres.",
     ),
 
-    # El Director puede tomar espacios ya reservados por otros
-    # ∀s∀t∀otro (Solicita(Director1, t) ∧ Reservada(s, otro, t)) ⇒ Asignable(s, Director1, t)
-    Rule(
-        name="R17_director_prioridad_reserva",
-        antecedents=(
-            ("Solicita", "Director1", "?t"),
-            ("Reservada", "?s", "?otro", "?t"),
-        ),
-        consequent=("Asignable", "?s", "Director1", "?t"),
-        description="El Director puede tomar espacios reservados por otros.",
-    ),
-
     ### Recomendación por continuidad ###
     # ∀g (Requiere2Horas(g) ⇒ NecesitaSlotsConsecutivos(g))
     Rule(
-        name="R18_requiere_continuidad",
+        name="R17_requiere_continuidad",
         antecedents=(("Requiere2Horas", "?g"),),
         consequent=("NecesitaSlotsConsecutivos", "?g"),
         description=("Para toda solicitud que requiere 2 horas, necesita slots consecutivos."),
@@ -154,7 +142,7 @@ EXTRA_RULES = [
     ### Las reuniones individuales son de capacidad baja ###
     # ∀g  EstudioIndividual(g) ⇒ CapacidadBaja(g)
     Rule(
-        name="R19_estudio_requiere_baja",
+        name="R18_estudio_requiere_baja",
         antecedents=(("EstudioIndividual", "?g"),),
         consequent=("RequiereCapacidadBaja", "?g"),
     ),
@@ -162,7 +150,7 @@ EXTRA_RULES = [
     ### Capacidad Media implica capacidad Baja ###
     # ∀s  CapacidadMedia(s) ⇒ CapacidadBaja(s)
     Rule(
-        name="R20_capacidad_media_implica_baja",
+        name="R19_capacidad_media_implica_baja",
         antecedents=(("CapacidadMedia", "?s"),),
         consequent=("CapacidadBaja", "?s"),
         description=(
@@ -173,7 +161,7 @@ EXTRA_RULES = [
     ### Reunion en equipo requiere capacidad Media ###
     # ∀g  ReunionEquipo(g) ⇒ RequiereCapacidadMedia(g)
     Rule(
-        name="R21_reunion_equipo_requiere_media",
+        name="R20_reunion_equipo_requiere_media",
         antecedents=(("ReunionEquipo", "?g"),),
         consequent=("RequiereCapacidadMedia", "?g"),
         description=(
@@ -184,7 +172,7 @@ EXTRA_RULES = [
     ### Toda presentación es de capacidad Media ###
     # ∀g  Presentacion(g) ⇒ CapacidadMedia(g)
     Rule(
-        name="R22_presentacion_requiere_media",
+        name="R21_presentacion_requiere_media",
         antecedents=(("Presentacion", "?g"),),
         consequent=("RequiereCapacidadMedia", "?g"),
         description="Toda solicitud de tipo presentación requiere capacidad media.",
@@ -193,7 +181,7 @@ EXTRA_RULES = [
     ### Un espacio con proyector es recomendable ###
     # ∀s∀g∀t (Asignable(s,g, t) ∧ TieneProyector(s) ) ⇒ Recomendable(s,g,t))
     Rule(
-        name="R23_recomendar_tiene_proyectos",
+        name="R22_recomendar_tiene_proyectos",
         antecedents=(
             ("Asignable", "?s", "?g", "?t"),
             ("TieneProyector", "?s"),
@@ -205,7 +193,7 @@ EXTRA_RULES = [
     ### Reglas de compatibilidad ###
     ### Compatibilidad capacidad media
     Rule(
-        name="R24_compatible_capacidad_media",
+        name="R23_compatible_capacidad_media",
         antecedents=(
             ("RequiereCapacidadMedia", "?g"),
             ("CapacidadMedia", "?s"),
@@ -218,7 +206,7 @@ EXTRA_RULES = [
 
     ### Compatibilidad capacidad baja
     Rule(
-        name="R25_compatible_capacidad_baja",
+        name="R24_compatible_capacidad_baja",
         antecedents=(
             ("RequiereCapacidadBaja", "?g"),
             ("CapacidadBaja", "?s"),
@@ -231,7 +219,7 @@ EXTRA_RULES = [
 
     ## Asignación para toda capacidad
     Rule(
-        name="R26_asignar_por_capacidad",
+        name="R25_asignar_por_capacidad",
         antecedents=(
             ("Libre", "?s", "?t"),
             ("Solicita", "?g", "?t"),
@@ -245,7 +233,7 @@ EXTRA_RULES = [
 
     # Recomendación por capacidad
     Rule(
-        name="R27_recomendar_capacidad_justa",
+        name="R26_recomendar_capacidad_justa",
         antecedents=(
             ("Asignable", "?s", "?g", "?t"),
             ("CompatibleCapacidad", "?s", "?g"),
@@ -256,7 +244,7 @@ EXTRA_RULES = [
     ### Reglas para la asignación por tiempo
     # Si dos slots consecutivos están libres, se genera un slot largo
     Rule(
-        name="R28_generar_slot_largo",
+        name="R27_generar_slot_largo",
         antecedents=(
             ("Libre", "?s", "?t1"),
             ("Libre", "?s", "?t2"),
@@ -269,7 +257,7 @@ EXTRA_RULES = [
     ),
     # Reuniones largas requieren slots largos
     Rule(
-        name="R29_reunion_larga_usa_slot_largo",
+        name="R28_reunion_larga_usa_slot_largo",
         antecedents=(
             ("ReunionLarga", "?g"),
             ("Solicita", "?g", "?t"),
@@ -278,7 +266,7 @@ EXTRA_RULES = [
     ),
     # Reuniones largas sólo pueden ser asignadas a slots largos
     Rule(
-        name="R30_asignar_reunion_larga",
+        name="R29_asignar_reunion_larga",
         antecedents=(
             ("NecesitaSlotLargo", "?g"),
             ("Solicita", "?g", "?t"),
