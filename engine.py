@@ -160,12 +160,18 @@ def reserve_space(
     slot: str,
     duration: int = 1,
     slots: Optional[List[str]] = None,
+    allow_override: bool = False, # Cambio para reservación del Director
 ) -> Set[Fact]:
 
     updated = set(base_facts)
 
     # Si no hay slots definidos, comportamiento original
     if not slots:
+        if allow_override: # Override del director
+            to_remove = [f for f in updated 
+                        if f[0] == "Reservada" and f[1] == space and len(f) > 3 and f[3] == slot]
+            for f in to_remove:
+                updated.discard(f)
         updated.discard(("Libre", space, slot))
         updated.add(("Ocupada", space, slot))
         updated.add(("Reservada", space, request_id, slot))
@@ -179,6 +185,11 @@ def reserve_space(
     selected_slots = slots[start_index:start_index + duration]
 
     for s in selected_slots:
+        if allow_override:
+            to_remove = [f for f in updated 
+                        if f[0] == "Reservada" and f[1] == space and len(f) > 3 and f[3] == s]
+            for f in to_remove:
+                updated.discard(f)
         updated.discard(("Libre", space, s))
         updated.add(("Ocupada", space, s))
         updated.add(("Reservada", space, request_id, s))

@@ -98,23 +98,28 @@ with right_col:
 
         st.write(f"Solicitud: **{request_type}({request_id})** en **{slot}**")
 
-        from engine import filter_facts
+        assignable_spaces = [fact[1] for fact in result["assignable"]]
+        recommendable_spaces = [fact[1] for fact in result["recommendable"]]
 
-        closure = result["closure"]
-
-        assignable_spaces = [f[1] for f in filter_facts(closure, "Asignable", None, request_id, slot)]
-        recommendable_spaces = [f[1] for f in filter_facts(closure, "Recomendable", None, request_id, slot)]
-        highly_recommendable_spaces = [f[1] for f in filter_facts(closure, "AltamenteRecomendable", None, request_id, slot)]
-        priority_spaces = [f[1] for f in filter_facts(closure, "AsignablePrioritario", None, request_id, slot)]
+        is_director = ("EsDirector", request_id) in current_facts
 
         if selected_module_name == "kb_v2":
+            from engine import filter_facts as ef
+            closure = result["closure"]
+            asig_prio_facts = ef(closure, "AsignablePrioritario", None, request_id, slot)
+            prioritario_spaces = {f[1] for f in asig_prio_facts}
+
             valid_spaces = []
             for space in assignable_spaces:
                 start_index = kb["slots"].index(slot)
                 needed_slots = kb["slots"][start_index:start_index + duration]
-                disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
-                if len(needed_slots) == duration and disponible:
+
+                if is_director and space in prioritario_spaces:
                     valid_spaces.append(space)
+                else:
+                    disponible = all(("Libre", space, s) in current_facts for s in needed_slots)
+                    if len(needed_slots) == duration and disponible:
+                        valid_spaces.append(space)
             assignable_spaces = valid_spaces
 
         if assignable_spaces:
@@ -123,16 +128,10 @@ with right_col:
         else:
             st.error("No se encontró ningún espacio asignable para esta solicitud.")
 
-        if highly_recommendable_spaces:
-            st.success("Espacios ALTAMENTE recomendables (máxima prioridad):")
-            st.write(", ".join(highly_recommendable_spaces))
-
-        if priority_spaces:
-            st.info("🏷️ Espacios con prioridad (director):")
-            st.write(", ".join(priority_spaces))
-
         if recommendable_spaces:
-            st.write("Espacios recomendables:", ", ".join(recommendable_spaces))
+            st.write("**Espacios recomendables:**", ", ".join(recommendable_spaces))
+        else:
+            st.write("**Espacios recomendables:** ninguno derivado todavía.")
 
         # Métricas V2 adicionales en la inferencia activa
         if selected_module_name == "kb_v2":
@@ -158,6 +157,7 @@ with right_col:
                             slot,
                             duration if selected_module_name == "kb_v2" else 1,
                             kb["slots"],
+                            allow_override=is_director,
                         )
                         st.session_state[session_key] = updated
                         st.session_state.pop("last_result", None)
@@ -186,34 +186,6 @@ results_v2 = run_cases("kb_v2")
 
 comparison_df = comparison_dataframe(results_v1, results_v2)
 st.bar_chart(comparison_df)
-
-# ---------------------------------------------------------------------------
-# Métricas específicas de PRIORIDAD (R16–R17)
-# ---------------------------------------------------------------------------
-st.markdown("### Métricas específicas: Prioridad de Director (R16–R17)")
-
-def director_priority_metrics(results_df):
-    total = len(results_df)
-    
-    # Casos donde aparece AsignablePrioritario
-    prioridad = results_df["closure"].apply(
-        lambda facts: any(f[0] == "AsignablePrioritario" for f in facts)
-    ).sum()
-    
-    # Casos donde aparece AltamenteRecomendable por prioridad
-    alta = results_df["closure"].apply(
-        lambda facts: any(f[0] == "AltamenteRecomendable" for f in facts)
-    ).sum()
-
-    return {
-        "Casos con prioridad director": prioridad,
-        "Casos altamente recomendables": alta,
-        "Total casos": total,
-    }
-
-metrics_v2 = director_priority_metrics(results_v2)
-
-st.write(metrics_v2)
 
 # ---------------------------------------------------------------------------
 # Métricas exclusivas de KB V2

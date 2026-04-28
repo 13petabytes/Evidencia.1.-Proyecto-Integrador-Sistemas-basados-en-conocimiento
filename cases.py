@@ -105,6 +105,30 @@ V2_ONLY_CASES = [
         "expected_spaces": {"AulaA", "SalaReuniones"},
         "extra_facts": set(),
     },
+    #------------------------------------------------------------------------
+    # Override del Director1
+    # R17, R17a, R17b, R17c
+    # Caso AulaA está reservada por "req1", Reservada(AulaA, req1, h1)
+    # AulaA está "Reservada"
+    # Request con "ID" solicita, slot = "h1", type = "EstudioIndividual"
+    # El AulaA deja de estar reservada por "req1" y ahora es de "Director1"
+
+    # Derivación:
+        #   R16a: EsDirector(Director1) → AltaPrioridad(Director1)
+        #   R17:  Solicita(Director1, h1) ∧ EsDirector(Director1) ∧ Reservada(AulaA, req1, h1)
+        #         → AsignablePrioritario(AulaA, Director1, h1)
+        #   R17a: AsignablePrioritario(AulaA, Director1, h1) → Asignable(AulaA, Director1, h1)
+        #   R17b: AsignablePrioritario(AulaA, Director1, h1) → Recomendable(AulaA, Director1, h1)
+        #   R17c: AsignablePrioritario(AulaA, Director1, h1) → AltamenteRecomendable(AulaA, Director1, h1)
+        #
+    {
+        "case_name": "V2-Prioridad Director: Director1 toma un espacio reservado",
+        "request_id": "Director1",
+        "slot": "h1",
+        "request_type": "EstudioIndividual",
+        "expected_spaces": {"AulaA", "AulaB", "Biblio1", "AuditorioMini"},  # (todos: libres Y reservados)
+        "extra_facts": {("Reservada", "AulaA", "req1", "h1")},  # Reservación pre-existente
+    },
 ]
 
 

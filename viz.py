@@ -28,15 +28,17 @@ def availability_dataframe(
     for space in spaces:
         row = {"Espacio": space}
         for slot in slots:
-            if filter_facts(facts, "Reservada", space, None, slot):
-                status = "Reservada"
+            reservada_facts = filter_facts(facts, "Reservada", space, None, slot)
+            if reservada_facts:
+                # Cambio de código para mostrar ID de la request en la UI
+                request_ids = [f[2] for f in reservada_facts]
+                row[slot] = f"🟦 Reservada ({', '.join(request_ids)})"
             elif ("Ocupada", space, slot) in facts:
-                status = "Ocupada"
+                row[slot] = STATUS_TO_EMOJI["Ocupada"]
             elif ("Libre", space, slot) in facts:
-                status = "Libre"
+                row[slot] = STATUS_TO_EMOJI["Libre"]
             else:
-                status = "Desconocido"
-            row[slot] = STATUS_TO_EMOJI[status]
+                row[slot] = STATUS_TO_EMOJI["Desconocido"]
         rows.append(row)
 
     return pd.DataFrame(rows)
