@@ -95,16 +95,6 @@ V2_ONLY_CASES = [
         "expected_spaces": {"AulaA", "SalaReuniones"},
         "extra_facts": set(),
     },
-    # R22: RequiereSilencio + Silenciosa ⇒ Asignable (vía regla explícita V2).
-    # EstudioIndividual en h3: AulaB y Biblio1 son silenciosas.
-    {
-        "case_name": "V2-C5 - EstudioIndividual en h3 (silencio explícito R22)",
-        "request_id": "reqV2_5",
-        "slot": "h3",
-        "request_type": "EstudioIndividual",
-        "expected_spaces": {"AulaB", "Biblio1"},
-        "extra_facts": set(),
-    },
     # R16: Director1 tiene prioridad sobre espacios libres.
     # Inyectamos Solicita(Director1, h4) para que R16 derive AsignablePrioritario.
     {

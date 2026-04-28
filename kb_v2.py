@@ -181,7 +181,7 @@ EXTRA_RULES = [
     ### Un espacio con proyector es recomendable ###
     # ∀s∀g∀t (Asignable(s,g, t) ∧ TieneProyector(s) ) ⇒ Recomendable(s,g,t))
     Rule(
-        name="R22_recomendar_tiene_proyectos",
+        name="R22_recomendar_tiene_proyector",
         antecedents=(
             ("Asignable", "?s", "?g", "?t"),
             ("TieneProyector", "?s"),
