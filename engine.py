@@ -1,9 +1,12 @@
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
 
 
+# Un hecho se representa como una tupla de strings.
+# Ejemplo: ("Libre", "AulaA", "h2")
 Fact = Tuple[str, ...]
 Substitution = Dict[str, str]
 
@@ -17,6 +20,7 @@ class Rule:
 
 
 def is_variable(token: str) -> bool:
+    """Convención simple: una variable empieza con '?'."""
     return isinstance(token, str) and token.startswith("?")
 
 
@@ -43,6 +47,10 @@ def substitute_fact(pattern: Fact, theta: Substitution) -> Fact:
 
 
 def match_fact(pattern: Fact, fact: Fact, theta: Optional[Substitution] = None) -> Optional[Substitution]:
+    """
+    Intenta hacer match entre un patrón y un hecho concreto.
+    Solo soporta variables del lado del patrón.
+    """
     if len(pattern) != len(fact):
         return None
 
@@ -67,7 +75,10 @@ def _find_substitutions(
     facts: Sequence[Fact],
     theta: Optional[Substitution] = None,
 ) -> Iterator[Substitution]:
-
+    """
+    Backtracking muy simple para encontrar sustituciones que satisfacen
+    todos los antecedentes de una regla.
+    """
     theta = dict(theta or {})
 
     if not antecedents:
@@ -92,7 +103,10 @@ def forward_chain(
     rules: Sequence[Rule],
     max_rounds: int = 50,
 ) -> Tuple[Set[Fact], List[dict]]:
-
+    """
+    Encadenamiento hacia adelante elemental.
+    Repite hasta que ya no aparezcan hechos nuevos.
+    """
     known_facts: Set[Fact] = set(base_facts)
     trace: List[dict] = []
 
@@ -129,6 +143,9 @@ def query_facts(facts: Iterable[Fact], predicate: str) -> List[Fact]:
 
 
 def filter_facts(facts: Iterable[Fact], predicate: str, *args: Optional[str]) -> List[Fact]:
+    """
+    Filtra hechos del predicado indicado. Usa None como wildcard.
+    """
     results: List[Fact] = []
     for fact in set(facts):
         if fact[0] != predicate:
@@ -152,37 +169,11 @@ def add_request_facts(base_facts: Iterable[Fact], request_id: str, slot: str, re
     return updated
 
 
-# (KB_V2) Función para reservar un espacio (considerando la duración de la solicitud)
-def reserve_space(
-    base_facts: Iterable[Fact],
-    space: str,
-    request_id: str,
-    slot: str,
-    duration: int = 1,
-    slots: Optional[List[str]] = None,
-) -> Set[Fact]:
-
+def reserve_space(base_facts: Iterable[Fact], space: str, request_id: str, slot: str) -> Set[Fact]:
     updated = set(base_facts)
-
-    # Si no hay slots definidos, comportamiento original
-    if not slots:
-        updated.discard(("Libre", space, slot))
-        updated.add(("Ocupada", space, slot))
-        updated.add(("Reservada", space, request_id, slot))
-        return updated
-
-    try:
-        start_index = slots.index(slot)
-    except ValueError:
-        return updated
-
-    selected_slots = slots[start_index:start_index + duration]
-
-    for s in selected_slots:
-        updated.discard(("Libre", space, s))
-        updated.add(("Ocupada", space, s))
-        updated.add(("Reservada", space, request_id, s))
-
+    updated.discard(("Libre", space, slot))
+    updated.add(("Ocupada", space, slot))
+    updated.add(("Reservada", space, request_id, slot))
     return updated
 
 
@@ -193,7 +184,6 @@ def run_request(
     slot: str,
     request_type: str,
 ) -> dict:
-
     facts_with_request = add_request_facts(base_facts, request_id, slot, request_type)
     closure, trace = forward_chain(facts_with_request, rules)
 

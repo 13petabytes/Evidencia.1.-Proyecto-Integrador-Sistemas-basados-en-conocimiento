@@ -122,17 +122,8 @@ with right_col:
         else:
             st.write("**Espacios recomendables:** ninguno derivado todavía.")
 
-        # Métricas V2 adicionales en la inferencia activa
-        if selected_module_name == "kb_v2":
-            closure = result["closure"]
-            from engine import filter_facts
-            alta_prio = filter_facts(closure, "AltamenteRecomendable", None, request_id, slot)
-            asig_prio = filter_facts(closure, "AsignablePrioritario", None, request_id, slot)
-            if alta_prio:
-                st.info(f"⭐ Alta prioridad (R14-R15): {len(alta_prio)} espacio(s) altamente recomendable(s).")
-            if asig_prio:
-                st.info(f"🏷️ Prioridad director (R16): {len(asig_prio)} espacio(s) asignable(s) prioritariamente.")
-
+        
+       
         st.markdown("#### Reservar")
         if assignable_spaces:
             reserve_cols = st.columns(len(assignable_spaces))
@@ -143,9 +134,7 @@ with right_col:
                             current_facts,
                             space,
                             request_id,
-                            slot,
-                            duration if selected_module_name == "kb_v2" else 1,
-                            kb["slots"],
+                            slot
                         )
                         st.session_state[session_key] = updated
                         st.session_state.pop("last_result", None)
